@@ -53,10 +53,20 @@ func (p *Puzzle5) LoadVents1(input []string) {
 	v := &Vents{}
 	p.Vents = v
 	v.Grid = common.NewIntGrid()
+	maxRow := 0
+	maxCol := 0
 	for _, l := range input {
 		e := p.ParseEntry(l)
-		v.Grid.ExtendRows(max(e.setAInt[1], e.setBInt[1]))
-		v.Grid.ExtendCols(max(e.setAInt[0], e.setBInt[0]))
+		highRow := max(e.setAInt[1], e.setBInt[1])
+		highCol := max(e.setAInt[0], e.setBInt[0])
+		if highRow > maxRow {
+			v.Grid.ExtendRows(highRow)
+			maxRow = highRow
+		}
+		if highCol > maxCol {
+			v.Grid.ExtendCols(highCol)
+			maxCol = highCol
+		}
 		if e.setA[0] == e.setB[0] || e.setA[1] == e.setB[1] {
 			p.DrawLine(e)
 		}
@@ -91,7 +101,7 @@ func (p *Puzzle5) DrawLine(e *Entry) {
 	xcoord := e.setAInt[0]
 	ycoord := e.setAInt[1]
 	for {
-		p.Vents.Grid.Rows[ycoord].Cols[xcoord].Data++
+		p.Vents.Grid.Rows[ycoord].Cols[xcoord]++
 		xcoord += xInc
 		ycoord += yInc
 		if xInc > 0 && xcoord > e.setBInt[0] {
@@ -113,10 +123,20 @@ func (p *Puzzle5) LoadVents2(input []string) {
 	v := &Vents{}
 	p.Vents = v
 	v.Grid = common.NewIntGrid()
+	maxRow := 0
+	maxCol := 0
 	for _, l := range input {
 		e := p.ParseEntry(l)
-		v.Grid.ExtendRows(max(e.setAInt[1], e.setBInt[1]))
-		v.Grid.ExtendCols(max(e.setAInt[0], e.setBInt[0]))
+		highRow := max(e.setAInt[1], e.setBInt[1])
+		highCol := max(e.setAInt[0], e.setBInt[0])
+		if highRow > maxRow {
+			v.Grid.ExtendRows(highRow)
+			maxRow = highRow
+		}
+		if highCol > maxCol {
+			v.Grid.ExtendCols(highCol)
+			maxCol = highCol
+		}
 		p.DrawLine(e)
 	}
 	// v.Grid.Print(func(in int)string{
@@ -138,15 +158,7 @@ func (p Puzzle5) Part1(input common.AoCInput) (*common.AoCSolution, error) {
 	count := 0
 	for y := 0; y < len(p.Vents.Grid.Rows); y++ {
 		for x := 0; x < len(p.Vents.Grid.Rows[0].Cols); x++ {
-			if p.Vents.Grid.Rows[y] == nil {
-				fmt.Printf("Unknown row %v\n", y)
-				continue
-			}
-			if p.Vents.Grid.Rows[y].Cols[x] == nil {
-				fmt.Printf("Unknown col %v\n", x)
-				continue
-			}
-			if p.Vents.Grid.Rows[y].Cols[x].Data > 1 {
+			if p.Vents.Grid.Rows[y].Cols[x] > 1 {
 				count++
 			}
 		}
@@ -167,15 +179,7 @@ func (p Puzzle5) Part2(input common.AoCInput) (*common.AoCSolution, error) {
 	count := 0
 	for y := 0; y < len(p.Vents.Grid.Rows); y++ {
 		for x := 0; x < len(p.Vents.Grid.Rows[0].Cols); x++ {
-			if p.Vents.Grid.Rows[y] == nil {
-				fmt.Printf("Unknown row %v\n", y)
-				continue
-			}
-			if p.Vents.Grid.Rows[y].Cols[x] == nil {
-				fmt.Printf("Unknown col %v\n", x)
-				continue
-			}
-			if p.Vents.Grid.Rows[y].Cols[x].Data > 1 {
+			if p.Vents.Grid.Rows[y].Cols[x] > 1 {
 				count++
 			}
 		}

@@ -44,7 +44,6 @@ func (a *AoCInput) Default(def string) {
 }
 
 func (a *AoCInput) Read() ([]string, error) {
-	fmt.Println("Reading from " + a.Path + "/" +a.InputFile)
 	file, err := os.Open(a.Path + "/" +a.InputFile)
 	if err != nil {
 		return nil, err

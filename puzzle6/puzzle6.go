@@ -123,6 +123,6 @@ func (p Puzzle6) Part2(input common.AoCInput) (*common.AoCSolution, error) {
 	for x := 0; x < 256; x++ {
 		p.FishEmulator.Tick()
 	}
-	output.Text = fmt.Sprintf("%v", len(p.AllFish))
+	output.Text = fmt.Sprintf("%v", p.FishEmulator.Total())
 	return output, nil
 }

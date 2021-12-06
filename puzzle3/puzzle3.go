@@ -60,7 +60,7 @@ func (p *Puzzle3) Interpret1() int64 {
 	}
 	g, _ := strconv.ParseInt(gamma, 2, 0)
 	e, _ := strconv.ParseInt(epsilon, 2, 0)
-	fmt.Printf("%v, %v, %v, %v\n", gamma, epsilon, g, e)
+	// fmt.Printf("%v, %v, %v, %v\n", gamma, epsilon, g, e)
 	return g * e
 }
 
@@ -142,7 +142,7 @@ func (p *Puzzle3) Interpret2() int64 {
 	}
 	o, _ := strconv.ParseInt(oxy, 2, 0)
 	c, _ := strconv.ParseInt(co2, 2, 0)
-	fmt.Printf("%v, %v, %v, %v\n", oxy, co2, o, c)
+	// fmt.Printf("%v, %v, %v, %v\n", oxy, co2, o, c)
 	return o * c
 }
 

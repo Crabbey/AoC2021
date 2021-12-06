@@ -2,6 +2,7 @@ package common
 
 import (
 	"fmt"
+	"sync"
 )
 
 
@@ -10,11 +11,7 @@ type Grid struct {
 }
 
 type Row struct {
-	Cols map[int]*Col
-}
-
-type Col struct {
-	Data string
+	Cols map[int]string
 }
 
 type IntGrid struct {
@@ -22,11 +19,7 @@ type IntGrid struct {
 }
 
 type IntRow struct {
-	Cols map[int]*IntCol
-}
-
-type IntCol struct {
-	Data int
+	Cols map[int]int
 }
 
 func NewGrid() *Grid {
@@ -39,22 +32,29 @@ func (g *Grid) ExtendRows(pos int) {
 	for x := 0; x <=pos; x++ {
 		if g.Rows[x] == nil {
 			g.Rows[x] = &Row{
-				Cols: make(map[int]*Col),
+				Cols: make(map[int]string),
 			}
 		}
 	}
 }
 
 func (g *Grid) ExtendCols(pos int) {
+	wg := &sync.WaitGroup{}
 	for _, b := range g.Rows {
-		for x := 0; x <=pos; x++ {
-			if b.Cols[x] == nil {
-				b.Cols[x] = &Col{}
+		wg.Add(1)
+		go func(b *Row, wg *sync.WaitGroup, pos int) {
+			for x := len(b.Cols); x <=pos; x++ {
+				if _, ok := b.Cols[x]; !ok {
+					b.Cols[x] = ""
+				}
 			}
-		}
-
+			wg.Done()
+		}(b, wg, pos)
 	}
+	wg.Wait()
 }
+
+
 
 func NewIntGrid() *IntGrid {
 	return &IntGrid{
@@ -66,27 +66,32 @@ func (g *IntGrid) ExtendRows(pos int) {
 	for x := 0; x <=pos; x++ {
 		if g.Rows[x] == nil {
 			g.Rows[x] = &IntRow{
-				Cols: make(map[int]*IntCol),
+				Cols: make(map[int]int),
 			}
 		}
 	}
 }
 
 func (g *IntGrid) ExtendCols(pos int) {
+	wg := &sync.WaitGroup{}
 	for _, b := range g.Rows {
-		for x := 0; x <=pos; x++ {
-			if b.Cols[x] == nil {
-				b.Cols[x] = &IntCol{}
+		wg.Add(1)
+		go func(b *IntRow, wg *sync.WaitGroup, pos int) {
+			for x := len(b.Cols); x <=pos; x++ {
+				if _, ok := b.Cols[x]; !ok {
+					b.Cols[x] = 0
+				}
 			}
-		}
-
+			wg.Done()
+		}(b, wg, pos)
 	}
+	wg.Wait()
 }
 
 func (g *Grid) Print(f func(string)string) {
 	for y := 0; y < len(g.Rows); y++ {
 		for x := 0; x < len(g.Rows[0].Cols); x++ {
-			fmt.Print(f(g.Rows[y].Cols[x].Data))
+			fmt.Print(f(g.Rows[y].Cols[x]))
 		}
 		fmt.Println()
 	}
@@ -95,7 +100,7 @@ func (g *Grid) Print(f func(string)string) {
 func (g *IntGrid) Print(f func(int)string) {
 	for y := 0; y < len(g.Rows); y++ {
 		for x := 0; x < len(g.Rows[0].Cols); x++ {
-			fmt.Print(f(g.Rows[y].Cols[x].Data))
+			fmt.Print(f(g.Rows[y].Cols[x]))
 		}
 		fmt.Println()
 	}

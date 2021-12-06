@@ -39,7 +39,7 @@ import (
 
 var _ = spew.Dump
 
-const implemented = 25
+const implemented = 6
 
 func main() {
 	app := cli.NewApp()
