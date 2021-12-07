@@ -21,9 +21,18 @@ type Puzzle6 struct {
 	FishEmulator *FishEmulator
 }
 
+// Original solution
 type Fish struct {
 	p *Puzzle6
 	counter int
+}
+
+func (f *Fish) Tick() {
+	f.counter--
+	if f.counter == -1 {
+		f.p.NewFish(8)
+		f.counter = 6
+	}
 }
 
 type FishEmulator struct {
@@ -56,14 +65,7 @@ func (f *FishEmulator) Total() int {
 	return total
 }
 
-func (f *Fish) Tick() {
-	f.counter--
-	if f.counter == -1 {
-		f.p.NewFish(8)
-		f.counter = 6
-	}
-}
-
+// Defunct - original part 1 solution
 func (p *Puzzle6) Tick() {
 	var wg sync.WaitGroup
 	for _, f := range p.AllFish {
@@ -76,6 +78,7 @@ func (p *Puzzle6) Tick() {
 	wg.Wait()
 }
 
+// Defunct - original part 1 solution
 func (p *Puzzle6) NewFish(counter int) {
 	nf := &Fish{
 		counter: counter,
@@ -93,16 +96,18 @@ func (p Puzzle6) Part1(input common.AoCInput) (*common.AoCSolution, error) {
 		spew.Dump(i)
 		return nil, err
 	}
+	p.FishEmulator = &FishEmulator{}
+	p.FishEmulator.Init()
 	output := common.NewSolution(input, "")
 	fishCounters := strings.Split(i[0], ",")
 	for _, c := range fishCounters {
 		i, _ := strconv.Atoi(c)
-		p.NewFish(i)
+		p.FishEmulator.FishCount[i]++
 	}
 	for x := 0; x < 80; x++ {
-		p.Tick()
+		p.FishEmulator.Tick()
 	}
-	output.Text = fmt.Sprintf("%v", len(p.AllFish))
+	output.Text = fmt.Sprintf("%v", p.FishEmulator.Total())
 	return output, nil
 }
 

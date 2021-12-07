@@ -4,6 +4,8 @@ import (
 	"os"
 	"fmt"
 	"bufio"
+	"sync"
+	"time"
 )
 
 type AoCInput struct {
@@ -16,6 +18,9 @@ type AoCInput struct {
 type AoCSolution struct {
 	Input AoCInput
 	Text string
+	DebugStr string
+	mutex sync.Mutex
+	Elapsed time.Duration
 }
 
 type AoCPuzzle interface {
@@ -34,7 +39,26 @@ func NewSolution(puzzleinput AoCInput, input string) (*AoCSolution) {
 }
 
 func (a *AoCSolution) Print() {
-	fmt.Printf("Puzzle %v Part %v Solution: %v\n", a.Input.Puzzle, a.Input.Part, a.Text)
+	fmt.Printf("Puzzle %v, Part %v, File %v, Solution: %v\n", a.Input.Puzzle, a.Input.Part, a.Input.InputFile, a.Text)
+}
+
+func (a *AoCSolution) Debug(in string) {
+	a.mutex.Lock()
+	a.DebugStr += in
+	a.mutex.Unlock()
+}
+
+func (a *AoCSolution) PrintFancy() {
+	fmt.Printf("-------------------\n")
+	fmt.Printf("Puzzle %v.%v\n", a.Input.Puzzle, a.Input.Part)
+	fmt.Printf("Filename %v\n", a.Input.InputFile)
+	fmt.Printf("Took %s\n", a.Elapsed)
+	fmt.Printf("Answer: %v\n", a.Text)
+
+}
+
+func (a *AoCSolution) PrintDebug() {
+	fmt.Printf("%v\n", a.DebugStr)
 }
 
 func (a *AoCInput) Default(def string) {

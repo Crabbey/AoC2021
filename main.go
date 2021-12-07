@@ -5,6 +5,8 @@ import (
 	"sort"
 	"os"
 	"strconv"
+	"strings"
+	"time"
 
 	"github.com/davecgh/go-spew/spew"
 	"github.com/crabbey/aoc2021/puzzle1"
@@ -39,7 +41,7 @@ import (
 
 var _ = spew.Dump
 
-const implemented = 6
+const implemented = 7
 
 func main() {
 	app := cli.NewApp()
@@ -80,25 +82,26 @@ var cmdSinglePuzzle = cli.Command{
 	Name:  "puzzle",
 	Flags: []cli.Flag{
 		&cli.StringFlag{
-			Name:    "inputname",
-        	Aliases: []string{"i"},
+			Name:    "file",
+        	Aliases: []string{"f"},
 			Usage:   "Input file for puzzle",
-			EnvVars: []string{"inputname"},
+			EnvVars: []string{"file"},
 			Value:   "",
 		},
-		&cli.StringFlag{
-			Name:    "part",
-        	Aliases: []string{"p"},
-			Usage:   "Puzzle part",
-			EnvVars: []string{"part"},
-			Value:   "",
+		&cli.BoolFlag{
+			Name:    "example",
+        	Aliases: []string{"e"},
+			Usage:   "Use example input",
+			Value:   false,
 		},
 	},
 	Action: func(c *cli.Context) error {
 		puzzleid := c.Args().Get(0)
-		partid := c.String("part")
-		if partid == "" {
-			return CallPuzzle(c, puzzleid)
+		var partid string
+		if strings.Contains(puzzleid, ".") {
+			puzzlePrompt := strings.Split(puzzleid, ".")
+			puzzleid = puzzlePrompt[0]
+			partid = puzzlePrompt[1]
 		}
 		solution, err := CallPuzzlePart(c, puzzleid, partid)
 		if err != nil {
@@ -110,7 +113,10 @@ var cmdSinglePuzzle = cli.Command{
 }
 
 func GetInput(c *cli.Context, puzzleid, partid string) common.AoCInput {
-	iname := c.String("inputname")
+	iname := c.String("file")
+	if c.Bool("example") {
+		iname = "example.txt"
+	}
 	ret := common.AoCInput{
 		Path: "puzzle"+puzzleid,
 		InputFile: iname,
@@ -124,6 +130,7 @@ func GetInput(c *cli.Context, puzzleid, partid string) common.AoCInput {
 }
 
 func CallPuzzlePart(c *cli.Context, puzzleid string, partid string) (*common.AoCSolution, error) {
+	start := time.Now()
 	input := GetInput(c, puzzleid, partid)
 	var puzzle common.AoCPuzzle
 	switch puzzleid {
@@ -180,27 +187,28 @@ func CallPuzzlePart(c *cli.Context, puzzleid string, partid string) (*common.AoC
 	default:
 		return nil, fmt.Errorf("Unknown puzzle %v", puzzleid)
 	}
+	var ret *common.AoCSolution
+	var err error
 	switch partid {
 	case "1":
-		return puzzle.Part1(input)
+		ret, err = puzzle.Part1(input)
 	case "2":
-		return puzzle.Part2(input)
+		ret, err = puzzle.Part2(input)
 	default:
 		return nil, fmt.Errorf("Unknown part id %v", partid)
 	}
-	return nil, nil
+	ret.Elapsed = time.Since(start)
+	return ret, err
 }
 
 func CallPuzzle(c *cli.Context, puzzleid string) error {
-	solution, err := CallPuzzlePart(c, puzzleid, "1")
-	if err != nil {
-		return err
+	parts := []string{"1", "2"}
+	for _, x := range parts {
+		solution, err := CallPuzzlePart(c, puzzleid, x)
+		if err != nil {
+			return err
+		}
+		solution.PrintFancy()		
 	}
-	solution.Print()
-	solution2, err := CallPuzzlePart(c, puzzleid, "2")
-	if err != nil {
-		return err
-	}
-	solution2.Print()
 	return nil
 }
