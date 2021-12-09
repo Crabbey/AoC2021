@@ -83,14 +83,14 @@ var cmdSinglePuzzle = cli.Command{
 	Flags: []cli.Flag{
 		&cli.StringFlag{
 			Name:    "file",
-        	Aliases: []string{"f"},
+			Aliases: []string{"f"},
 			Usage:   "Input file for puzzle",
 			EnvVars: []string{"file"},
 			Value:   "",
 		},
 		&cli.BoolFlag{
 			Name:    "example",
-        	Aliases: []string{"e"},
+			Aliases: []string{"e"},
 			Usage:   "Use example input",
 			Value:   false,
 		},
@@ -102,12 +102,14 @@ var cmdSinglePuzzle = cli.Command{
 			puzzlePrompt := strings.Split(puzzleid, ".")
 			puzzleid = puzzlePrompt[0]
 			partid = puzzlePrompt[1]
+			solution, err := CallPuzzlePart(c, puzzleid, partid)
+			if err != nil {
+				return err
+			}
+			solution.Print()
+			return nil
 		}
-		solution, err := CallPuzzlePart(c, puzzleid, partid)
-		if err != nil {
-			return err
-		}
-		solution.Print()
+		CallPuzzle(c, puzzleid)
 		return nil
 	},
 }

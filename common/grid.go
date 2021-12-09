@@ -6,6 +6,11 @@ import (
 )
 
 
+type Coords struct {
+	Row int
+	Col int
+}
+
 type Grid struct {
 	Rows map[int]*Row
 }
@@ -26,6 +31,28 @@ func NewGrid() *Grid {
 	return &Grid{
 		Rows: make(map[int]*Row),
 	}
+}
+
+func (c *Coords) Print() (string) {
+	return fmt.Sprintf("%v, %v", c.Col, c.Row)
+}
+
+func (c *Coords) GetCoordsInDir(dir string, distance int) (*Coords) {
+	newCoords := Coords{
+		Row: c.Row,
+		Col: c.Col,
+	}
+	switch dir {
+		case "left":
+			newCoords.Col -= distance
+		case "right":
+			newCoords.Col += distance
+		case "up":
+			newCoords.Row -= distance
+		case "down":
+			newCoords.Row += distance
+	}
+	return &newCoords
 }
 
 func (g *Grid) ExtendRows(pos int) {
@@ -61,6 +88,17 @@ func NewIntGrid() *IntGrid {
 		Rows: make(map[int]*IntRow),
 	}
 }
+
+func (g *IntGrid) GetCoords(c *Coords) (int, bool) {
+	if _, ok := g.Rows[c.Row]; !ok {
+		return 0, false
+	}
+	if _, ok := g.Rows[c.Row].Cols[c.Col]; !ok {
+		return 0, false
+	}
+	return g.Rows[c.Row].Cols[c.Col], true
+}
+
 
 func (g *IntGrid) ExtendRows(pos int) {
 	for x := 0; x <=pos; x++ {
