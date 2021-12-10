@@ -101,20 +101,11 @@ func (p *Puzzle9) FindLowPoints () {
 }
 
 func (p *Puzzle9) ParseHeightmap (input []string) {
-	grid := common.NewIntGrid()
-	grid.ExtendRows(len(input)-1)
-	grid.ExtendCols(len(input[0])-1)
-	for y, l := range input {
-		e := strings.Split(l, "")
-		for x, i := range e {
-			height, _ := strconv.Atoi(i)
-			grid.Rows[y].Cols[x] = height
-		}
-	}
-	// grid.Print(func(a int) string{
-	// 	return fmt.Sprintf("%v", a)
-	// })
-	p.Grid = grid
+	p.Grid = common.NewIntGrid()
+	p.Grid.LoadFromFile(input, func(c string)int{
+		height, _ := strconv.Atoi(c)
+		return height
+	})
 }
 
 func (p Puzzle9) Part1(input common.AoCInput) (*common.AoCSolution, error) {

@@ -13,38 +13,24 @@ var _ = fmt.Println
 var _ = strings.Split
 
 type Puzzle3 struct {
-	Lines map[int]Line
+	Grid *common.IntGrid
 }
 
-type Line map[int]int
-
-func (l Line) String() string {
+func RowToString(r *common.IntRow) string {
 	ret := ""
-	for x := 0; x < len(l); x++ {
-		ret += strconv.Itoa(l[x])
+	for x := 0; x < len(r.Cols); x++ {
+		ret += strconv.Itoa(r.Cols[x])
 	}
 	return ret
-}
-
-func (p *Puzzle3) Parse(input []string) {
-	p.Lines = make(map[int]Line)
-	for x, l := range input {
-		line := make(map[int]int)
-		parts := strings.Split(l, "")
-		for y, c := range parts {
-			line[y], _ = strconv.Atoi(c)
-		}
-		p.Lines[x] = line
-	}
 }
 
 func (p *Puzzle3) Interpret1() int64 {
 	gamma := ""
 	epsilon := ""
-	for y := 0; y < len(p.Lines[0]); y++ {  // y = column
+	for y := 0; y < len(p.Grid.Rows[0].Cols); y++ {  // y = column
 		count := 0
-		for x := 0; x < len(p.Lines); x++ { // x = row
-			if p.Lines[x][y] == 0 {
+		for x := 0; x < len(p.Grid.Rows); x++ { // x = row
+			if p.Grid.Rows[x].Cols[y] == 0 {
 				count -= 1
 			} else {
 				count += 1
@@ -64,81 +50,76 @@ func (p *Puzzle3) Interpret1() int64 {
 	return g * e
 }
 
-func (p *Puzzle3) Interpret2() int64 {
+func (p *Puzzle3) Interpret2(input []string) int64 {
 	oxy := "0"
 	co2 := "0"
-	lines := make(map[int]Line)
-	for k, v := range p.Lines {
-	  lines[k] = v
-	}
-	bitwidth := len(lines[0])
+
+	p.Grid = common.NewIntGrid()
+	p.Grid.LoadFromFile(input, func(c string)int{
+		height, _ := strconv.Atoi(c)
+		return height
+	})
+
+	_, bitwidth := p.Grid.Dimensions()
+
 	for y := 0; y < bitwidth; y++ {  // y = column
 		count := 0
-		for x, _ := range lines { // x = row
-			if lines[x][y] == 0 {
+		for x, _ := range p.Grid.Rows { // x = row
+			if p.Grid.Rows[x].Cols[y] == 0 {
 				count -= 1
 			} else {
 				count += 1
 			}
 		}
-		for x, _ := range lines {
+		for x, _ := range p.Grid.Rows {
 			if count >= 0 {
-				if lines[x][y] == 0 {
-					delete(lines, x)
+				if p.Grid.Rows[x].Cols[y] == 0 {
+					delete(p.Grid.Rows, x)
 				}
 			} else {
-				if lines[x][y] == 1 {
-					delete(lines, x)
+				if p.Grid.Rows[x].Cols[y] == 1 {
+					delete(p.Grid.Rows, x)
 				}
 			}
 		}
-		// fmt.Printf("%v lines remaining\n", len(lines))
-		// for _, l := range lines {
-		// 	fmt.Printf("%v, ", l.String())
-		// }
-		// fmt.Println()
-		if len(lines) == 1 {
+		if len(p.Grid.Rows) == 1 {
 			break;
 		}
 	}
-	for _, l := range lines {
-		oxy = l.String()
+	for _, r := range p.Grid.Rows {
+		oxy = RowToString(r)
 	}
 
-	for k, v := range p.Lines {
-	  lines[k] = v
-	}
+	p.Grid.LoadFromFile(input, func(c string)int{
+		height, _ := strconv.Atoi(c)
+		return height
+	})
 	for y := 0; y < bitwidth; y++ {  // y = column
 		count := 0
-		for x, _ := range lines { // x = row
-			if lines[x][y] == 0 {
+		for x, _ := range p.Grid.Rows { // x = row
+			if p.Grid.Rows[x].Cols[y] == 0 {
 				count -= 1
 			} else {
 				count += 1
 			}
 		}
-		for x, _ := range lines {
+		for x, _ := range p.Grid.Rows {
 			if count >= 0 {
-				if lines[x][y] == 1 {
-					delete(lines, x)
+				if p.Grid.Rows[x].Cols[y] == 1 {
+					delete(p.Grid.Rows, x)
 				}
 			} else {
-				if lines[x][y] == 0 {
-					delete(lines, x)
+				if p.Grid.Rows[x].Cols[y] == 0 {
+					delete(p.Grid.Rows, x)
 				}
 			}
 		}
-		// fmt.Printf("%v lines remaining\n", len(lines))
-		// for _, l := range lines {
-			// fmt.Printf("%v, ", l.String())
-		// }
-		// fmt.Println()
-		if len(lines) == 1 {
+		if len(p.Grid.Rows) == 1 {
 			break;
 		}
 	}
-	for _, l := range lines {
-		co2 = l.String()
+	for _, l := range p.Grid.Rows {
+		co2 = RowToString(l)
 	}
 	o, _ := strconv.ParseInt(oxy, 2, 0)
 	c, _ := strconv.ParseInt(co2, 2, 0)
@@ -152,7 +133,11 @@ func (p Puzzle3) Part1(input common.AoCInput) (*common.AoCSolution, error) {
 		return nil, err
 	}
 	output := common.NewSolution(input, "")
-	p.Parse(i)
+	p.Grid = common.NewIntGrid()
+	p.Grid.LoadFromFile(i, func(c string)int{
+		height, _ := strconv.Atoi(c)
+		return height
+	})
 	answer := p.Interpret1()
 	output.Text = strconv.FormatInt(answer, 10)
 	return output, nil
@@ -164,8 +149,7 @@ func (p Puzzle3) Part2(input common.AoCInput) (*common.AoCSolution, error) {
 		return nil, err
 	}
 	output := common.NewSolution(input, "")
-	p.Parse(i)
-	answer := p.Interpret2()
+	answer := p.Interpret2(i)
 	output.Text = strconv.FormatInt(answer, 10)
 	return output, nil
 }

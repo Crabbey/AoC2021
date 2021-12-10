@@ -3,90 +3,27 @@ package common
 import (
 	"fmt"
 	"sync"
+	"strings"
 )
-
-
-type Coords struct {
-	Row int
-	Col int
-}
-
-type Grid struct {
-	Rows map[int]*Row
-}
-
-type Row struct {
-	Cols map[int]string
-}
 
 type IntGrid struct {
 	Rows map[int]*IntRow
+	StringKey map[int]string
 }
 
 type IntRow struct {
 	Cols map[int]int
 }
 
-func NewGrid() *Grid {
-	return &Grid{
-		Rows: make(map[int]*Row),
-	}
-}
-
-func (c *Coords) Print() (string) {
-	return fmt.Sprintf("%v, %v", c.Col, c.Row)
-}
-
-func (c *Coords) GetCoordsInDir(dir string, distance int) (*Coords) {
-	newCoords := Coords{
-		Row: c.Row,
-		Col: c.Col,
-	}
-	switch dir {
-		case "left":
-			newCoords.Col -= distance
-		case "right":
-			newCoords.Col += distance
-		case "up":
-			newCoords.Row -= distance
-		case "down":
-			newCoords.Row += distance
-	}
-	return &newCoords
-}
-
-func (g *Grid) ExtendRows(pos int) {
-	for x := 0; x <=pos; x++ {
-		if g.Rows[x] == nil {
-			g.Rows[x] = &Row{
-				Cols: make(map[int]string),
-			}
-		}
-	}
-}
-
-func (g *Grid) ExtendCols(pos int) {
-	wg := &sync.WaitGroup{}
-	for _, b := range g.Rows {
-		wg.Add(1)
-		go func(b *Row, wg *sync.WaitGroup, pos int) {
-			for x := len(b.Cols); x <=pos; x++ {
-				if _, ok := b.Cols[x]; !ok {
-					b.Cols[x] = ""
-				}
-			}
-			wg.Done()
-		}(b, wg, pos)
-	}
-	wg.Wait()
-}
-
-
-
 func NewIntGrid() *IntGrid {
 	return &IntGrid{
 		Rows: make(map[int]*IntRow),
+		StringKey: make(map[int]string),
 	}
+}
+
+func (g *IntGrid) Dimensions() (int, int) {
+	return len(g.Rows), len(g.Rows[0].Cols)
 }
 
 func (g *IntGrid) GetCoords(c *Coords) (int, bool) {
@@ -99,6 +36,16 @@ func (g *IntGrid) GetCoords(c *Coords) (int, bool) {
 	return g.Rows[c.Row].Cols[c.Col], true
 }
 
+func (g *IntGrid) SetCoords(c *Coords, v int) bool {
+	if _, ok := g.Rows[c.Row]; !ok {
+		return false
+	}
+	if _, ok := g.Rows[c.Row].Cols[c.Col]; !ok {
+		return false
+	}
+	g.Rows[c.Row].Cols[c.Col] = v
+	return true
+}
 
 func (g *IntGrid) ExtendRows(pos int) {
 	for x := 0; x <=pos; x++ {
@@ -110,36 +57,67 @@ func (g *IntGrid) ExtendRows(pos int) {
 	}
 }
 
-func (g *IntGrid) ExtendCols(pos int) {
+func (g *IntGrid) ExtendCols(width int) {
 	wg := &sync.WaitGroup{}
 	for _, b := range g.Rows {
 		wg.Add(1)
-		go func(b *IntRow, wg *sync.WaitGroup, pos int) {
-			for x := len(b.Cols); x <=pos; x++ {
+		go func(b *IntRow, wg *sync.WaitGroup, width int) {
+			for x := len(b.Cols); x <=width; x++ {
 				if _, ok := b.Cols[x]; !ok {
 					b.Cols[x] = 0
 				}
 			}
 			wg.Done()
-		}(b, wg, pos)
+		}(b, wg, width)
 	}
 	wg.Wait()
 }
 
-func (g *Grid) Print(f func(string)string) {
+func (g *IntGrid) Printf(f func(int)string) {
 	for y := 0; y < len(g.Rows); y++ {
 		for x := 0; x < len(g.Rows[0].Cols); x++ {
 			fmt.Print(f(g.Rows[y].Cols[x]))
+		}
+		fmt.Println()
+	}
+
+}
+
+func (g *IntGrid) SetKey(k int, val string) {
+	g.StringKey[k] = val
+}
+
+func (g *IntGrid) Print() {
+	for y := 0; y < len(g.Rows); y++ {
+		for x := 0; x < len(g.Rows[0].Cols); x++ {
+			if v, ok := g.StringKey[g.Rows[y].Cols[x]]; ok {
+				fmt.Print(v)
+				continue				
+			}
+			fmt.Print(g.Rows[y].Cols[x])
 		}
 		fmt.Println()
 	}
 }
 
-func (g *IntGrid) Print(f func(int)string) {
+func (g *IntGrid) Foreach(f func(int)) {
 	for y := 0; y < len(g.Rows); y++ {
 		for x := 0; x < len(g.Rows[0].Cols); x++ {
-			fmt.Print(f(g.Rows[y].Cols[x]))
+			f(g.Rows[y].Cols[x])
 		}
-		fmt.Println()
 	}
+}
+
+func (g *IntGrid) LoadFromFile(input []string, f func(string)int) {
+	g.ExtendRows(len(input)-1)
+	g.ExtendCols(len(input[0])-1)
+	for ycoord, line := range input {
+		chars := strings.Split(line, "")
+		for xcoord, char := range chars {
+			val := f(char)
+			g.SetKey(val, char)
+			g.Rows[ycoord].Cols[xcoord] = val
+		}
+	}
+
 }

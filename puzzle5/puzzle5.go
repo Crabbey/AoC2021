@@ -12,19 +12,13 @@ var _ = spew.Dump
 var _ = fmt.Println
 
 type Puzzle5 struct {
-	Vents *Vents
-}
-
-type Vents struct {
 	Grid *common.IntGrid
 }
 
 type Entry struct {
 	line string
-	setA []string
-	setB []string
-	setAInt []int
-	setBInt []int
+	SetA *common.Coords
+	SetB *common.Coords
 }
 
 func (p *Puzzle5) ParseEntry(input string) *Entry {
@@ -33,118 +27,108 @@ func (p *Puzzle5) ParseEntry(input string) *Entry {
 	two := strings.Split(a[1], ",")
 	ret := Entry{
 		line: input,
-		setA: one,
-		setB: two,
-		setAInt: make([]int, 2),
-		setBInt: make([]int, 2),
+		SetA: &common.Coords{},
+		SetB: &common.Coords{},
 	}
-	for x, l := range ret.setA {
-		g, _ := strconv.Atoi(l)
-		ret.setAInt[x] = g
+	for x, l := range one {
+		switch x {
+			case 0:
+				ret.SetA.Col, _ = strconv.Atoi(l)
+			case 1:
+				ret.SetA.Row, _ = strconv.Atoi(l)
+		}
 	}
-	for x, l := range ret.setB {
-		g, _ := strconv.Atoi(l)
-		ret.setBInt[x] = g
+	for x, l := range two {
+		switch x {
+			case 0:
+				ret.SetB.Col, _ = strconv.Atoi(l)
+			case 1:
+				ret.SetB.Row, _ = strconv.Atoi(l)
+		}
 	}
 	return &ret
 }
 
 func (p *Puzzle5) LoadVents1(input []string) {
-	v := &Vents{}
-	p.Vents = v
-	v.Grid = common.NewIntGrid()
-	maxRow := 0
-	maxCol := 0
+	p.Grid = common.NewIntGrid()
+	var entries []*Entry
+	var highRow int
+	var highCol int
 	for _, l := range input {
 		e := p.ParseEntry(l)
-		highRow := max(e.setAInt[1], e.setBInt[1])
-		highCol := max(e.setAInt[0], e.setBInt[0])
-		if highRow > maxRow {
-			v.Grid.ExtendRows(highRow)
-			maxRow = highRow
-		}
-		if highCol > maxCol {
-			v.Grid.ExtendCols(highCol)
-			maxCol = highCol
-		}
-		if e.setA[0] == e.setB[0] || e.setA[1] == e.setB[1] {
+		entries = append(entries, e)
+		highRow = max(highRow, max(e.SetA.Row, e.SetB.Row))
+		highCol = max(highCol, max(e.SetA.Col, e.SetB.Col))
+	}
+	p.Grid.ExtendRows(highRow)
+	p.Grid.ExtendCols(highCol)
+
+	for _, e := range entries {
+		diff := e.SetA.Diff(e.SetB)
+		if diff.Row == 0 || diff.Col == 0 {
 			p.DrawLine(e)
 		}
 	}
-	// v.Grid.Print(func(in int)string{
-	// 	if in == 0 {
-	// 		return "."
-	// 	}
-	// 	return strconv.Itoa(in)
-	// })
+	// p.Grid.SetKey(0, ".")
+	// p.Grid.Print()
 }
 
 
 func (p *Puzzle5) DrawLine(e *Entry) {
-	xInc := 0
-	yInc := 0
-	if (e.setAInt[0] < e.setBInt[0]) {
+	vector := &common.Coords{}
+	if (e.SetA.Col < e.SetB.Col) {
 		// A X < B X
-		xInc = 1
-	} else if (e.setAInt[0] > e.setBInt[0]) {
+		vector.Col = 1
+	} else if (e.SetA.Col > e.SetB.Col) {
 		// A X > B X
-		xInc = -1
+		vector.Col = -1
 	}
 
-	if (e.setAInt[1] < e.setBInt[1]) {
+	if (e.SetA.Row < e.SetB.Row) {
 		// A Y < B Y
-		yInc = 1
-	} else if (e.setAInt[1] > e.setBInt[1]) {
+		vector.Row = 1
+	} else if (e.SetA.Row > e.SetB.Row) {
 		// A Y > B Y
-		yInc = -1
+		vector.Row = -1
 	}
-	xcoord := e.setAInt[0]
-	ycoord := e.setAInt[1]
+	activeCoord := &common.Coords{
+		Col: e.SetA.Col,
+		Row: e.SetA.Row,
+	}
 	for {
-		p.Vents.Grid.Rows[ycoord].Cols[xcoord]++
-		xcoord += xInc
-		ycoord += yInc
-		if xInc > 0 && xcoord > e.setBInt[0] {
+		p.Grid.Rows[activeCoord.Row].Cols[activeCoord.Col]++
+		activeCoord.Translate(vector, 1)
+		if vector.Col > 0 && activeCoord.Col > e.SetB.Col {
 			break
-		}
-		if xInc < 0 && xcoord < e.setBInt[0] {
+		} else if vector.Col < 0 && activeCoord.Col < e.SetB.Col {
 			break
-		}
-		if yInc > 0 && ycoord > e.setBInt[1] {
+		} else if vector.Row > 0 && activeCoord.Row > e.SetB.Row {
 			break
-		}
-		if yInc < 0 && ycoord < e.setBInt[1] {
+		} else if vector.Row < 0 && activeCoord.Row < e.SetB.Row {
 			break
 		}
 	}
 }
 
 func (p *Puzzle5) LoadVents2(input []string) {
-	v := &Vents{}
-	p.Vents = v
-	v.Grid = common.NewIntGrid()
-	maxRow := 0
-	maxCol := 0
+	p.Grid = common.NewIntGrid()
+	var entries []*Entry
+	var highRow int
+	var highCol int
 	for _, l := range input {
 		e := p.ParseEntry(l)
-		highRow := max(e.setAInt[1], e.setBInt[1])
-		highCol := max(e.setAInt[0], e.setBInt[0])
-		if highRow > maxRow {
-			v.Grid.ExtendRows(highRow)
-			maxRow = highRow
-		}
-		if highCol > maxCol {
-			v.Grid.ExtendCols(highCol)
-			maxCol = highCol
-		}
+		entries = append(entries, e)
+		highRow = max(highRow, max(e.SetA.Row, e.SetB.Row))
+		highCol = max(highCol, max(e.SetA.Col, e.SetB.Col))
+	}
+	p.Grid.ExtendRows(highRow)
+	p.Grid.ExtendCols(highCol)
+
+	for _, e := range entries {
 		p.DrawLine(e)
 	}
-	// v.Grid.Print(func(in int)string{
-	// 	if in == 0 {
-	// 		return "."
-	// 	}
-	// 	return strconv.Itoa(in)
-	// })
+	// p.Grid.SetKey(0, ".")
+	// p.Grid.Print()
 }
 
 func (p Puzzle5) Part1(input common.AoCInput) (*common.AoCSolution, error) {
@@ -156,13 +140,11 @@ func (p Puzzle5) Part1(input common.AoCInput) (*common.AoCSolution, error) {
 	output := common.NewSolution(input, "")
 	p.LoadVents1(i)
 	count := 0
-	for y := 0; y < len(p.Vents.Grid.Rows); y++ {
-		for x := 0; x < len(p.Vents.Grid.Rows[0].Cols); x++ {
-			if p.Vents.Grid.Rows[y].Cols[x] > 1 {
-				count++
-			}
+	p.Grid.Foreach(func(i int) {
+		if i > 1 {
+			count++
 		}
-	}
+	})
 
 	output.Text = fmt.Sprintf("%v", count)
 	return output, nil
@@ -177,13 +159,12 @@ func (p Puzzle5) Part2(input common.AoCInput) (*common.AoCSolution, error) {
 	output := common.NewSolution(input, "")
 	p.LoadVents2(i)
 	count := 0
-	for y := 0; y < len(p.Vents.Grid.Rows); y++ {
-		for x := 0; x < len(p.Vents.Grid.Rows[0].Cols); x++ {
-			if p.Vents.Grid.Rows[y].Cols[x] > 1 {
-				count++
-			}
+	p.Grid.Foreach(func(i int) {
+		if i > 1 {
+			count++
 		}
-	}
+	})
+
 
 	output.Text = fmt.Sprintf("%v", count)
 	return output, nil
