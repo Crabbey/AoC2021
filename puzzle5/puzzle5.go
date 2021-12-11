@@ -140,7 +140,7 @@ func (p Puzzle5) Part1(input common.AoCInput) (*common.AoCSolution, error) {
 	output := common.NewSolution(input, "")
 	p.LoadVents1(i)
 	count := 0
-	p.Grid.Foreach(func(i int) {
+	p.Grid.Foreach(func(i int, c *common.Coords) {
 		if i > 1 {
 			count++
 		}
@@ -159,7 +159,7 @@ func (p Puzzle5) Part2(input common.AoCInput) (*common.AoCSolution, error) {
 	output := common.NewSolution(input, "")
 	p.LoadVents2(i)
 	count := 0
-	p.Grid.Foreach(func(i int) {
+	p.Grid.Foreach(func(i int, c *common.Coords) {
 		if i > 1 {
 			count++
 		}

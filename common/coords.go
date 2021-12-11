@@ -55,3 +55,7 @@ func (c *Coords) Diff(second *Coords) *Coords {
 	}
 	return ret
 }
+
+func (c *Coords) UniqueReference() string {
+	return fmt.Sprintf("%v|%v", c.Row, c.Col)
+}

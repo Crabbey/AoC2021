@@ -4,7 +4,11 @@ import (
 	"fmt"
 	"sync"
 	"strings"
+	"strconv"
+	"github.com/davecgh/go-spew/spew"
 )
+
+var _ = spew.Dump
 
 type IntGrid struct {
 	Rows map[int]*IntRow
@@ -43,7 +47,10 @@ func (g *IntGrid) SetCoords(c *Coords, v int) bool {
 	if _, ok := g.Rows[c.Row].Cols[c.Col]; !ok {
 		return false
 	}
+	// fmt.Printf("Setting %v, %v from %v to %v\n", c.Row, c.Col, g.Rows[c.Row].Cols[c.Col], v)
 	g.Rows[c.Row].Cols[c.Col] = v
+	// spew.Dump(g.Rows[c.Row])
+	// panic("")
 	return true
 }
 
@@ -100,12 +107,25 @@ func (g *IntGrid) Print() {
 	}
 }
 
-func (g *IntGrid) Foreach(f func(int)) {
+func (g *IntGrid) Foreach(f func(int, *Coords)) {
 	for y := 0; y < len(g.Rows); y++ {
 		for x := 0; x < len(g.Rows[0].Cols); x++ {
-			f(g.Rows[y].Cols[x])
+			f(g.Rows[y].Cols[x], &Coords{Row: y, Col: x})
 		}
 	}
+}
+
+func (g *IntGrid) WriteForeach(f func(int, *Coords) int) {
+	for y := 0; y < len(g.Rows); y++ {
+		for x := 0; x < len(g.Rows[0].Cols); x++ {
+			g.Rows[y].Cols[x] = f(g.Rows[y].Cols[x], &Coords{Row: y, Col: x})
+		}
+	}
+}
+
+func StrToInt(s string) int {
+	a, _ := strconv.Atoi(s)
+	return a
 }
 
 func (g *IntGrid) LoadFromFile(input []string, f func(string)int) {
