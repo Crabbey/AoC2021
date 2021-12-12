@@ -81,9 +81,11 @@ func (p *Puzzle12) LoadCaves(input []string) {
 	// }
 }
 
-func (c *Cave) SearchForEnd(p *Path) ([]*Path) {
+func (c *Cave) SearchForEnd(p *Path, resp chan []*Path) {
 	var ret []*Path
 	// p.Print(true)
+	count := 0
+	ch := make(chan []*Path)
 	for _, next := range c.Connections {
 		if !p.CanRevisit(next) && !next.IsBig {
 			// fmt.Printf("Cave %v ignoring path %v because on path ", c.Name, next.Name)
@@ -95,11 +97,22 @@ func (c *Cave) SearchForEnd(p *Path) ([]*Path) {
 			ret = append(ret, newPath)
 			continue
 		}
-		search := next.SearchForEnd(newPath)
+		count++
+		go next.SearchForEnd(newPath, ch)
+	}
+	run := 0
+	for {
+		if count == 0 {
+			// fmt.Printf("Cave %v exiting (%v) from ", c.Name, run)
+			break
+		}
+		search := <- ch
+		count--
+		run++
 		ret = append(ret, search...)
 	}
 	// fmt.Printf("Cave %v returning %v paths\n", c.Name, len(ret))
-	return ret
+	resp <- ret
 }
 
 type Path struct {
@@ -177,7 +190,9 @@ func (p *Puzzle12) FindPaths(numVisits int, print bool) int {
 	}
 	path := a.Clone()
 	path.Add(p.StartCave)
-	allPaths := p.StartCave.SearchForEnd(path.Clone())
+	ch := make(chan []*Path)
+	go p.StartCave.SearchForEnd(path.Clone(), ch)
+	allPaths := <- ch
 	if print {
 		for _, d := range allPaths {
 			d.Print(false)
