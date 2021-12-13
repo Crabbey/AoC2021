@@ -99,7 +99,7 @@ func (g *IntGrid) Print() {
 		for x := 0; x < len(g.Rows[0].Cols); x++ {
 			if v, ok := g.StringKey[g.Rows[y].Cols[x]]; ok {
 				fmt.Print(v)
-				continue				
+				continue
 			}
 			fmt.Print(g.Rows[y].Cols[x])
 		}

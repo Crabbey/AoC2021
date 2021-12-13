@@ -2,6 +2,8 @@ package common
 
 import (
 	"fmt"
+	"strings"
+	"strconv"
 	"github.com/davecgh/go-spew/spew"
 )
 
@@ -58,4 +60,15 @@ func (c *Coords) Diff(second *Coords) *Coords {
 
 func (c *Coords) UniqueReference() string {
 	return fmt.Sprintf("%v|%v", c.Row, c.Col)
+}
+
+func CoordFromString(i string) *Coords {
+	parts := strings.Split(i, ",")
+	Row, _ := strconv.Atoi(parts[1])
+	Col, _ := strconv.Atoi(parts[0])
+	c := Coords{
+		Row: Row,
+		Col: Col,
+	}
+	return &c
 }
