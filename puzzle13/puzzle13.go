@@ -79,7 +79,7 @@ func (p *Puzzle13) ParseAnswer() string {
 			break
 		}
 		g := common.NewIntGrid()
-		// g.SetKey(0, " ")
+		g.SetKey(0, " ")
 		g.SetKey(1, "#")
 		for y, r := range p.Grid.Rows {
 			g.ExtendRows(y)
@@ -155,6 +155,7 @@ func (p Puzzle13) Part2(input common.AoCInput) (*common.AoCSolution, error) {
 	for _, l := range p.FoldLines {
 		p.Fold(l)
 	}
+	p.Grid.Print()
 	output.Text = fmt.Sprintf("%v", p.ParseAnswer())
 	return output, nil
 }
