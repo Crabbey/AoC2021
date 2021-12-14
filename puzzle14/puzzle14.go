@@ -128,6 +128,7 @@ func (p *Puzzle14) CountCommonalityTable() int {
 	return highest - lowest
 }
 
+// Deprecated
 func (p *Puzzle14) CountCommonality() int {
 	vals := make(map[string]int)
 	for _, v := range p.State {
@@ -149,11 +150,13 @@ func (p *Puzzle14) CountCommonality() int {
 	return highest - lowest
 }
 
+// Deprecated
 type Match struct {
 	X int
 	Val string
 }
 
+// Deprecated
 func (p *Puzzle14) DoRound() {
 	p.Round++
 	additions := make(map[int]string)
@@ -191,7 +194,6 @@ func (p *Puzzle14) DoRound() {
 	for a, k := range keys {
 		p.State = p.State[:k+a] + additions[k] + p.State[k+a:]
 	}
-	// spew.Dump(p.State)
 }
 
 func (p Puzzle14) Part1(input common.AoCInput) (*common.AoCSolution, error) {
@@ -203,9 +205,9 @@ func (p Puzzle14) Part1(input common.AoCInput) (*common.AoCSolution, error) {
 	output := common.NewSolution(input, "")
 	p.Parse(i)
 	for x := 0; x < 10; x++ {
-		p.DoRound()
+		p.DoRoundTable()
 	}
-	output.Text = fmt.Sprintf("%v", p.CountCommonality())
+	output.Text = fmt.Sprintf("%v", p.CountCommonalityTable())
 	return output, nil
 }
 
