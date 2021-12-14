@@ -18,6 +18,7 @@ var _ = strconv.Itoa
 type Puzzle14 struct {
 	State string
 	Instructions []*Instruction
+	Table map[string]int
 	Round int
 }
 
@@ -25,6 +26,7 @@ type Instruction struct {
 	Pair string
 	Value string
 	Re *regexp.Regexp
+	Products []string
 }
 
 func (p *Puzzle14) AddInstruction(i string) {
@@ -33,11 +35,20 @@ func (p *Puzzle14) AddInstruction(i string) {
 		Pair: parts[0],
 		Value: parts[1],
 		Re: regexp.MustCompile(parts[0]),
+		Products: []string{
+			string(parts[0][0]) + parts[1],
+			parts[1] + string(parts[0][1]),
+		},
 	}
+	for _, v := range inst.Products {
+		p.Table[v] = 0
+	}
+	p.Table[inst.Pair] = 0
 	p.Instructions = append(p.Instructions, inst)
 }
 
 func (p *Puzzle14) Parse(i []string) {
+	p.Table = make(map[string]int)
 	isInstructions := false
 	for _, l := range i {
 		if l == "" {
@@ -50,7 +61,73 @@ func (p *Puzzle14) Parse(i []string) {
 		}
 		p.State = l
 	}
+	for x := 0; x < len(p.State)-1; x++ {
+		p.Table[p.State[x:x+2]]++
+	}
+
+	// test := []string{
+	// 	"NN",
+	// 	"NC",
+	// 	"CB",
+	// }
+	// for _, v := range test {
+	// 	fmt.Printf("%v: %v\n", v, p.Table[v])
+	// }
+	// fmt.Println()
 }
+
+func (p *Puzzle14) DoRoundTable() {
+	p.Round++
+	newTable := make(map[string]int)
+	for _, i := range p.Instructions {
+		for _, x := range i.Products {
+			newTable[x] += p.Table[i.Pair]
+		}
+	}
+	p.Table = newTable
+	// test := []string{
+	// 	"NC",
+	// 	"CN",
+	// 	"NB",
+	// 	"BC",
+	// 	"CH",
+	// 	"HB",
+	// }
+	// for _, v := range test {
+	// 	fmt.Printf("%v: %v\n", v, p.Table[v])
+	// }
+}
+
+func (p *Puzzle14) CountCommonalityTable() int {
+	vals := make(map[string]int)
+	for k, v := range p.Table {
+		vals[string(k[0])] += v
+		vals[string(k[1])] += v
+	}
+
+	// The first and last letter are off-by-one
+	vals[string(p.State[0])]++
+	vals[string(p.State[len(p.State)-1])]++
+
+	// All values are doubled, because they're accounted for twice
+	for k, v := range vals {
+		vals[k] = v/2
+	}
+
+	// spew.Dump(vals)
+	highest := 0
+	lowest := 100000000000000000 // big for init
+	for _	, v := range vals {
+		if v > highest {
+			highest = v
+		} 
+		if v < lowest {
+			lowest = v
+		}
+	}
+	return highest - lowest
+}
+
 func (p *Puzzle14) CountCommonality() int {
 	vals := make(map[string]int)
 	for _, v := range p.State {
@@ -80,8 +157,7 @@ type Match struct {
 func (p *Puzzle14) DoRound() {
 	p.Round++
 	additions := make(map[int]string)
-	for a, i := range p.Instructions {
-		fmt.Printf("R %v I %v\n", p.Round, a)
+	for _, i := range p.Instructions {
 		wg := &sync.WaitGroup{}
 		ch := make(chan *Match)
 		wg.Add(len(p.State)-1)
@@ -142,8 +218,8 @@ func (p Puzzle14) Part2(input common.AoCInput) (*common.AoCSolution, error) {
 	output := common.NewSolution(input, "")
 	p.Parse(i)
 	for x := 0; x < 40; x++ {
-		p.DoRound()
+		p.DoRoundTable()
 	}
-	output.Text = fmt.Sprintf("%v", p.CountCommonality())
+	output.Text = fmt.Sprintf("%v", p.CountCommonalityTable())
 	return output, nil
 }
