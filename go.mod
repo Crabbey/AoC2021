@@ -3,6 +3,7 @@ module github.com/crabbey/aoc2021
 go 1.14
 
 require (
+	github.com/RyanCarrier/dijkstra v1.1.0 // indirect
 	github.com/crabbey/aoc2021/common v0.0.0-00010101000000-000000000000 // indirect
 	github.com/crabbey/aoc2021/puzzle1 v0.0.0-00010101000000-000000000000 // indirect
 	github.com/crabbey/aoc2021/puzzle10 v0.0.0-00010101000000-000000000000 // indirect

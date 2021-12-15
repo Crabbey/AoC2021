@@ -13,6 +13,7 @@ type AoCInput struct {
 	InputFile string
 	Puzzle string
 	Part string
+	StartTime time.Time
 }
 
 type AoCSolution struct {
@@ -20,7 +21,12 @@ type AoCSolution struct {
 	Text string
 	DebugStr string
 	mutex sync.Mutex
-	Elapsed time.Duration
+	Benchmarks []*Benchmark
+}
+
+type Benchmark struct {
+	Name string
+	Time time.Time
 }
 
 type AoCPuzzle interface {
@@ -32,10 +38,16 @@ func NewSolution(puzzleinput AoCInput, input string) (*AoCSolution) {
 	if input == "" {
 		input = "No solution found"
 	}
-	return &AoCSolution{
+	bm := &Benchmark{
+		Name: "Start",
+		Time: puzzleinput.StartTime,
+	}
+	ret := &AoCSolution{
 		Input: puzzleinput,
 		Text: input,
 	}
+	ret.Benchmarks = append(ret.Benchmarks, bm)
+	return ret
 }
 
 func (a *AoCSolution) Print() {
@@ -48,11 +60,46 @@ func (a *AoCSolution) Debug(in string) {
 	a.mutex.Unlock()
 }
 
+func (a *AoCSolution) PrintBenchmarks() {
+	var lastBM *Benchmark
+	for _, b := range a.Benchmarks {
+		if b.Name == "End" {
+			continue
+		}
+		if lastBM != nil {
+			fmt.Printf("%v: %v\n", b.Name, b.Time.Sub(lastBM.Time))
+		}
+		lastBM = b
+	}
+}
+
+func (a *AoCSolution) Elapsed() time.Duration {
+	var startBM *Benchmark 
+	var endBM *Benchmark 
+	for _, b := range a.Benchmarks {
+		if b.Name == "Start" {
+			startBM = b
+		} else if b.Name == "End" {
+			endBM = b
+		}
+	}
+	return endBM.Time.Sub(startBM.Time)
+}
+
+func (a *AoCSolution) Benchmark(name string) {
+	bm := &Benchmark{
+		Name: name,
+		Time: time.Now(),
+	}
+	a.Benchmarks = append(a.Benchmarks, bm)
+}
+
 func (a *AoCSolution) PrintFancy() {
 	fmt.Printf("-------------------\n")
 	fmt.Printf("Puzzle %v.%v\n", a.Input.Puzzle, a.Input.Part)
 	fmt.Printf("Filename %v\n", a.Input.InputFile)
-	fmt.Printf("Took %s\n", a.Elapsed)
+	fmt.Printf("Took %s\n", a.Elapsed())
+	a.PrintBenchmarks()
 	fmt.Printf("Answer: %v\n", a.Text)
 
 }

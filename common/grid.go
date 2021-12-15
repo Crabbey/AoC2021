@@ -6,6 +6,7 @@ import (
 	"strings"
 	"strconv"
 	"github.com/davecgh/go-spew/spew"
+	"github.com/RyanCarrier/dijkstra"
 )
 
 var _ = spew.Dump
@@ -140,4 +141,32 @@ func (g *IntGrid) LoadFromFile(input []string, f func(string)int) {
 		}
 	}
 
+}
+
+var CardinalDirs = []string{
+	"left",
+	"right",
+	"up",
+	"down",
+}
+
+func (g *IntGrid) CreateDijkstra() (*dijkstra.Graph, map[string]*dijkstra.Vertex) {
+	graph := dijkstra.NewGraph()
+	x := 0
+	vertices := make(map[string]*dijkstra.Vertex)
+	g.Foreach(func(v int, coord *Coords){
+		vertices[coord.UniqueReference()] = graph.AddVertex(x)
+		x++
+	})
+	g.Foreach(func(v int, coord *Coords){
+		for _, dir := range CardinalDirs {
+			dircoord := coord.GetCoordsInDir(dir, 1)
+			weight, ok := g.GetCoords(dircoord)
+			if !ok {
+				continue
+			}
+			graph.AddArc(vertices[coord.UniqueReference()].ID, vertices[dircoord.UniqueReference()].ID, int64(weight))
+		}
+	})
+	return graph, vertices
 }

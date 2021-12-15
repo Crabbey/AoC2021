@@ -41,7 +41,7 @@ import (
 
 var _ = spew.Dump
 
-const implemented = 12
+const implemented = 15
 
 func main() {
 	app := cli.NewApp()
@@ -115,16 +115,18 @@ var cmdSinglePuzzle = cli.Command{
 }
 
 func GetInput(c *cli.Context, puzzleid, partid string) common.AoCInput {
+	ret := common.AoCInput{
+		StartTime: time.Now(),
+	}
 	iname := c.String("file")
 	if c.Bool("example") {
 		iname = "example.txt"
 	}
-	ret := common.AoCInput{
-		Path: "puzzle"+puzzleid,
-		InputFile: iname,
-		Puzzle: puzzleid,
-		Part: partid,
-	}
+
+	ret.Path = "puzzle"+puzzleid
+	ret.InputFile = iname
+	ret.Puzzle = puzzleid
+	ret.Part = partid
 	if iname == "" {
 		ret.InputFile = "input.txt"
 	}
@@ -132,7 +134,6 @@ func GetInput(c *cli.Context, puzzleid, partid string) common.AoCInput {
 }
 
 func CallPuzzlePart(c *cli.Context, puzzleid string, partid string) (*common.AoCSolution, error) {
-	start := time.Now()
 	input := GetInput(c, puzzleid, partid)
 	var puzzle common.AoCPuzzle
 	switch puzzleid {
@@ -199,7 +200,7 @@ func CallPuzzlePart(c *cli.Context, puzzleid string, partid string) (*common.AoC
 	default:
 		return nil, fmt.Errorf("Unknown part id %v", partid)
 	}
-	ret.Elapsed = time.Since(start)
+	ret.Benchmark("End")
 	return ret, err
 }
 
